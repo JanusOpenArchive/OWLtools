@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OWL Dictionary | OWL Tools</title>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="global.css">
+    <style>
+        * {
+            font-family: var(--font);
+        }
+        body {
+            font-family: var(--font);
+            text-align: center;
+            padding: 20px;
+        }
+        #container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        #results {
+            text-align: left;
+            margin-top: 20px;
+        }
+        .audio-button {
+            cursor: pointer;
+            color: blue;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h2>Dictionary App</h2>
+        <input type="text" id="word" placeholder="Enter a word...">
+        <button id="search">Search</button>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            function searchWord() {
+                let word = $("#word").val().trim();
+                if (word === "") return;
+                
+                $.getJSON(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`, function(data) {
+                    let output = "";
+                    data.forEach(entry => {
+                        output += `<h3>${entry.word} (${entry.phonetic || "No phonetic available"})</h3>`;
+                        
+                        entry.phonetics.forEach(p => {
+                            if (p.audio) {
+                                output += `<p class='audio-button' onclick='playAudio("${p.audio}")'>🔊 Play Pronunciation</p>`;
+                            }
+                        });
+                        
+                        if (entry.origin) {
+                            output += `<p><strong>Origin:</strong> ${entry.origin}</p>`;
+                        }
+                        
+                        entry.meanings.forEach(meaning => {
+                            output += `<h4>${meaning.partOfSpeech}</h4>`;
+                            meaning.definitions.forEach(def => {
+                                output += `<p><strong>Definition:</strong> ${def.definition}</p>`;
+                                if (def.example) output += `<p><em>Example:</em> ${def.example}</p>`;
+                            });
+                        });
+                    });
+                    
+                    $("#results").html(output);
+                }).fail(function() {
+                    $("#results").html("<p style='color: red;'>Word not found. Please try another word.</p>");
+                });
+            }
+            
+            $("#search").click(searchWord);
+            
+            $("#word").keypress(function(event) {
+                if (event.which === 13) {
+                    searchWord();
+                }
+            });
+        });
+        
+        function playAudio(url) {
+            new Audio(url).play();
+        }
+    </script>
+</body>
+</html>

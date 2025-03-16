@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OWL Thesaurus | OWL Tools</title>
+    <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="global.css">
+    <style>
+        * {
+            font-family: var(--font);
+        }
+        body {
+            font-family: var(--font);
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            padding-bottom: 10px;
+        }
+        h1 {
+            color: #333;
+            margin-top: 20px;
+        }
+        input {
+            padding: 10px;
+            width: 250px;
+            margin: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            width: 50%;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .results h2 {
+            color: #444;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        ul li {
+            display: inline-block;
+            padding: 5px 10px;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        ul li.antonym {
+            background: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <h1>Thesaurus Lookup</h1>
+    <input type="text" id="wordInput" placeholder="Enter a word...">
+    <button onclick="lookupWord()">Search</button>
+    
+    <div class="results" id="resultsContainer" style="display: none;">
+        <h2>Results for: <span id="wordTitle"></span></h2>
+        <h3>Synonyms</h3>
+        <ul id="synonyms"></ul>
+        <h3>Antonyms</h3>
+        <ul id="antonyms"></ul>
+    </div>
+
+    <script>
+        document.getElementById("wordInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                lookupWord();
+            }
+        });
+
+        function lookupWord() {
+            let word = document.getElementById("wordInput").value.trim();
+            if (word === "") return;
+
+            document.getElementById("wordTitle").textContent = word;
+            document.getElementById("synonyms").innerHTML = "";
+            document.getElementById("antonyms").innerHTML = "";
+            document.getElementById("resultsContainer").style.display = "block";
+
+            fetch(`https://api.datamuse.com/words?rel_syn=${word}`)
+                .then(response => response.json())
+                .then(data => {
+                    let synonymsList = document.getElementById("synonyms");
+                    if (data.length === 0) {
+                        synonymsList.innerHTML = "<li>No synonyms found</li>";
+                    } else {
+                        data.forEach(item => {
+                            let li = document.createElement("li");
+                            li.textContent = item.word;
+                            synonymsList.appendChild(li);
+                        });
+                    }
+                });
+
+            fetch(`https://api.datamuse.com/words?rel_ant=${word}`)
+                .then(response => response.json())
+                .then(data => {
+                    let antonymsList = document.getElementById("antonyms");
+                    if (data.length === 0) {
+                        antonymsList.innerHTML = "<li>No antonyms found</li>";
+                    } else {
+                        data.forEach(item => {
+                            let li = document.createElement("li");
+                            li.textContent = item.word;
+                            li.classList.add("antonym");
+                            antonymsList.appendChild(li);
+                        });
+                    }
+                });
+        }
+    </script>
+</body>
+</html>
